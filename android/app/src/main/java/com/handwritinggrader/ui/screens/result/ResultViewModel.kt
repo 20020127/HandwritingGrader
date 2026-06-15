@@ -44,8 +44,12 @@ class ResultViewModel @Inject constructor(
     fun checkAnswer(imageFile: File) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            
+
             try {
+                if (!imageFile.exists() || imageFile.length() == 0L) {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = "图片文件不存在或为空")
+                    return@launch
+                }
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val filePart = MultipartBody.Part.createFormData("file", imageFile.name, requestFile)
                 

@@ -21,7 +21,7 @@ data class CameraUiState(
     val isOcrLoading: Boolean = false,
     val ocrText: String = "",
     val ocrError: String? = null,
-    val imageUri: Uri? = null,
+    val hasImage: Boolean = false,
     val imageFile: File? = null
 )
 
@@ -34,45 +34,55 @@ class CameraViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CameraUiState())
     val uiState: StateFlow<CameraUiState> = _uiState.asStateFlow()
 
-    fun setImageUri(uri: Uri) {
-        _uiState.value = _uiState.value.copy(imageUri = uri, ocrText = "", ocrError = null)
-    }
-
-    fun startOcr() {
-        val uri = _uiState.value.imageUri ?: return
+    fun processImage(uri: Uri) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isOcrLoading = true, ocrError = null)
+            _uiState.value = CameraUiState(isOcrLoading = true, hasImage = true)
             try {
-                val file = copyUriToFile(uri)
+                val file = uriToFile(uri)
                 _uiState.value = _uiState.value.copy(imageFile = file)
-                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
-                val result = apiService.recognizeText(filePart)
+                doOcr(file)
+            } catch (e: Throwable) {
                 _uiState.value = _uiState.value.copy(
                     isOcrLoading = false,
-                    ocrText = result.fullText
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isOcrLoading = false,
-                    ocrError = e.message ?: "OCR识别失败"
+                    ocrError = e.message ?: "处理图片失败"
                 )
             }
         }
     }
 
-    fun clearOcr() {
+    private suspend fun doOcr(file: File) {
+        try {
+            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            val result = apiService.recognizeText(filePart)
+            _uiState.value = _uiState.value.copy(
+                isOcrLoading = false,
+                ocrText = result.fullText
+            )
+        } catch (e: Throwable) {
+            _uiState.value = _uiState.value.copy(
+                isOcrLoading = false,
+                ocrError = e.message ?: "OCR识别失败"
+            )
+        }
+    }
+
+    fun reset() {
         _uiState.value = CameraUiState()
     }
 
-    private fun copyUriToFile(uri: Uri): File {
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: throw Exception("无法读取图片")
+    private fun uriToFile(uri: Uri): File {
+        val input = context.contentResolver.openInputStream(uri)
+            ?: throw Exception("无法读取图片，请检查权限")
         val file = File(context.cacheDir, "ocr_${System.currentTimeMillis()}.jpg")
-        file.outputStream().use { output ->
-            inputStream.copyTo(output)
+        try {
+            file.outputStream().use { out -> input.copyTo(out) }
+        } finally {
+            input.close()
         }
-        inputStream.close()
+        if (!file.exists() || file.length() == 0L) {
+            throw Exception("图片文件为空或写入失败")
+        }
         return file
     }
 }
