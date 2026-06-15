@@ -45,7 +45,7 @@ data class GradingResult(
 
 data class CheckResponse(
     @SerializedName("ocr_result")
-    val ocrResult: OcrResult = OcrResult(),
+    val ocrResult: OcrResult? = null,
     @SerializedName("grading_result")
     val gradingResult: GradingResult = GradingResult(),
     @SerializedName("student_answer")
@@ -133,4 +133,18 @@ data class QuestionTypeStatistics(
     val wrongCount: Int = 0,
     @SerializedName("accuracy_rate")
     val accuracyRate: Double = 0.0
+)
+
+data class ModelInfo(
+    @SerializedName("id")
+    val id: String = "",
+    @SerializedName("name")
+    val name: String = "",
+    @SerializedName("is_vision")
+    val isVision: Boolean = false
+)
+
+data class ModelListResponse(
+    @SerializedName("models")
+    val models: List<ModelInfo> = emptyList()
 )

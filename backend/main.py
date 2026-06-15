@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import ocr, grading, wrong_questions, statistics
+from app.api import ocr, grading, wrong_questions, statistics, models
 from app.core.config import settings
 from app.models.database import engine, Base
 
@@ -20,6 +20,7 @@ app.add_middleware(
 
 app.include_router(ocr.router, prefix="/api/ocr", tags=["OCR识别"])
 app.include_router(grading.router, prefix="/api/grading", tags=["作业批改"])
+app.include_router(models.router, prefix="/api/models", tags=["模型管理"])
 app.include_router(wrong_questions.router, prefix="/api/wrong-questions", tags=["错题本"])
 app.include_router(statistics.router, prefix="/api/statistics", tags=["成绩统计"])
 

@@ -32,6 +32,9 @@ interface ApiService {
         @Part("correct_answer") correctAnswer: RequestBody? = null
     ): CheckResponse
 
+    @GET("api/models/models")
+    suspend fun getModels(): ModelListResponse
+
     @GET("api/wrong-questions/")
     suspend fun getWrongQuestions(
         @Query("subject") subject: String? = null,
