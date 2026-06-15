@@ -1,0 +1,11 @@
+fastapi==0.109.0
+uvicorn==0.27.0
+paddleocr==2.7.3
+paddlepaddle==2.6.1
+python-multipart==0.0.6
+Pillow==10.2.0
+pydantic==2.5.3
+httpx==0.26.0
+python-dotenv==1.0.0
+sqlalchemy==2.0.25
+aiosqlite==0.19.0

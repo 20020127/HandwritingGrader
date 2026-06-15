@@ -1,0 +1,35 @@
+# Built files
+*.apk
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+
+# Gradle
+.gradle/
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+captures/
+
+# Keystore (don't commit secrets!)
+*.jks
+*.keystore
+
+# Environment
+.env
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
