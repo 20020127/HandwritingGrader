@@ -235,7 +235,7 @@ fun StatisticsScreen(
                                         )
                                     }
                                     LinearProgressIndicator(
-                                        progress = { (stat.accuracyRate / 100).toFloat() },
+                                        progress = (stat.accuracyRate / 100).toFloat(),
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(8.dp)
@@ -294,7 +294,7 @@ fun StatisticsScreen(
                                         )
                                     }
                                     LinearProgressIndicator(
-                                        progress = { (stat.accuracyRate / 100).toFloat() },
+                                        progress = (stat.accuracyRate / 100).toFloat(),
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(8.dp)
