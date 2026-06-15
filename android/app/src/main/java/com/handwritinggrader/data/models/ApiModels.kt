@@ -4,37 +4,37 @@ import com.google.gson.annotations.SerializedName
 
 data class OcrResult(
     @SerializedName("success")
-    val success: Boolean,
+    val success: Boolean = false,
     @SerializedName("texts")
-    val texts: List<TextItem>,
+    val texts: List<TextItem> = emptyList(),
     @SerializedName("full_text")
-    val fullText: String,
+    val fullText: String = "",
     @SerializedName("text_count")
-    val textCount: Int,
+    val textCount: Int = 0,
     @SerializedName("error")
     val error: String? = null
 )
 
 data class TextItem(
     @SerializedName("text")
-    val text: String,
+    val text: String = "",
     @SerializedName("confidence")
-    val confidence: Double,
+    val confidence: Double = 0.0,
     @SerializedName("box")
-    val box: List<List<Double>>
+    val box: List<List<Double>> = emptyList()
 )
 
 data class GradingResult(
     @SerializedName("success")
-    val success: Boolean,
+    val success: Boolean = false,
     @SerializedName("is_correct")
-    val isCorrect: Boolean,
+    val isCorrect: Boolean = false,
     @SerializedName("score")
-    val score: Int,
+    val score: Int = 0,
     @SerializedName("max_score")
-    val maxScore: Int,
+    val maxScore: Int = 100,
     @SerializedName("feedback")
-    val feedback: String,
+    val feedback: String = "",
     @SerializedName("error_type")
     val errorType: String? = null,
     @SerializedName("key_points")
@@ -45,26 +45,26 @@ data class GradingResult(
 
 data class CheckResponse(
     @SerializedName("ocr_result")
-    val ocrResult: OcrResult,
+    val ocrResult: OcrResult = OcrResult(),
     @SerializedName("grading_result")
-    val gradingResult: GradingResult,
+    val gradingResult: GradingResult = GradingResult(),
     @SerializedName("student_answer")
-    val studentAnswer: String
+    val studentAnswer: String = ""
 )
 
 data class WrongQuestion(
     @SerializedName("id")
-    val id: Int,
+    val id: Int = 0,
     @SerializedName("question_content")
-    val questionContent: String,
+    val questionContent: String = "",
     @SerializedName("correct_answer")
-    val correctAnswer: String,
+    val correctAnswer: String = "",
     @SerializedName("student_answer")
-    val studentAnswer: String,
+    val studentAnswer: String = "",
     @SerializedName("question_type")
-    val questionType: String,
+    val questionType: String = "",
     @SerializedName("subject")
-    val subject: String,
+    val subject: String = "",
     @SerializedName("error_reason")
     val errorReason: String? = null,
     @SerializedName("question_number")
@@ -72,7 +72,7 @@ data class WrongQuestion(
     @SerializedName("homework_title")
     val homeworkTitle: String? = null,
     @SerializedName("create_time")
-    val createTime: String,
+    val createTime: String = "",
     @SerializedName("review_count")
     val reviewCount: Int = 0,
     @SerializedName("is_mastered")
@@ -83,54 +83,54 @@ data class WrongQuestion(
 
 data class StatisticsOverview(
     @SerializedName("period_days")
-    val periodDays: Int,
+    val periodDays: Int = 30,
     @SerializedName("total_submissions")
-    val totalSubmissions: Int,
+    val totalSubmissions: Int = 0,
     @SerializedName("correct_count")
-    val correctCount: Int,
+    val correctCount: Int = 0,
     @SerializedName("wrong_count")
-    val wrongCount: Int,
+    val wrongCount: Int = 0,
     @SerializedName("accuracy_rate")
-    val accuracyRate: Double,
+    val accuracyRate: Double = 0.0,
     @SerializedName("average_score")
-    val averageScore: Double,
+    val averageScore: Double = 0.0,
     @SerializedName("unmastered_wrong_questions")
-    val unmasteredWrongQuestions: Int
+    val unmasteredWrongQuestions: Int = 0
 )
 
 data class SubjectStatistics(
     @SerializedName("subject")
-    val subject: String,
+    val subject: String = "",
     @SerializedName("total_questions")
-    val totalQuestions: Int,
+    val totalQuestions: Int = 0,
     @SerializedName("correct_count")
-    val correctCount: Int,
+    val correctCount: Int = 0,
     @SerializedName("wrong_count")
-    val wrongCount: Int,
+    val wrongCount: Int = 0,
     @SerializedName("accuracy_rate")
-    val accuracyRate: Double
+    val accuracyRate: Double = 0.0
 )
 
 data class DailyStatistics(
     @SerializedName("date")
-    val date: String,
+    val date: String = "",
     @SerializedName("total_questions")
-    val totalQuestions: Int,
+    val totalQuestions: Int = 0,
     @SerializedName("correct_count")
-    val correctCount: Int,
+    val correctCount: Int = 0,
     @SerializedName("accuracy_rate")
-    val accuracyRate: Double
+    val accuracyRate: Double = 0.0
 )
 
 data class QuestionTypeStatistics(
     @SerializedName("question_type")
-    val questionType: String,
+    val questionType: String = "",
     @SerializedName("total_questions")
-    val totalQuestions: Int,
+    val totalQuestions: Int = 0,
     @SerializedName("correct_count")
-    val correctCount: Int,
+    val correctCount: Int = 0,
     @SerializedName("wrong_count")
-    val wrongCount: Int,
+    val wrongCount: Int = 0,
     @SerializedName("accuracy_rate")
-    val accuracyRate: Double
+    val accuracyRate: Double = 0.0
 )

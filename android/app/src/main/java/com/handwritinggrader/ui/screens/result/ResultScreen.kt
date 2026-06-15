@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,14 +25,21 @@ fun ResultScreen(
     question: String,
     questionType: String,
     subject: String,
+    filePath: String,
     onNavigateBack: () -> Unit,
     onNavigateHome: () -> Unit,
     viewModel: ResultViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(question, questionType, subject) {
+    LaunchedEffect(question, questionType, subject, filePath) {
         viewModel.setQuestionInfo(question, questionType, subject)
+        if (filePath.isNotBlank()) {
+            val file = File(filePath)
+            if (file.exists()) {
+                viewModel.checkAnswer(file)
+            }
+        }
     }
 
     Scaffold(
@@ -58,33 +65,23 @@ fun ResultScreen(
         when {
             uiState.isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            strokeWidth = 4.dp
-                        )
-                        Text(
-                            text = "正在批改中...",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(48.dp), strokeWidth = 4.dp)
+                        Text("正在批改中...", style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
 
             uiState.error != null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -92,28 +89,16 @@ fun ResultScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
+                            modifier = Modifier.size(72.dp).clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.errorContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Default.Error,
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                            Icon(Icons.Default.Error, contentDescription = null,
+                                modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.error)
                         }
-                        Text(
-                            text = uiState.error!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Button(
-                            onClick = { viewModel.retry() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge)
+                        Button(onClick = { viewModel.retry() }, shape = RoundedCornerShape(12.dp)) {
                             Text("重试")
                         }
                     }
@@ -136,103 +121,61 @@ fun ResultScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isCorrect) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.errorContainer
-                            }
+                            containerColor = if (isCorrect) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.errorContainer
                         )
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
+                            modifier = Modifier.fillMaxWidth().padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(CircleShape)
+                                modifier = Modifier.size(72.dp).clip(CircleShape)
                                     .background(
-                                        if (isCorrect) {
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                        } else {
-                                            MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                                        }
+                                        if (isCorrect) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                        else MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = if (isCorrect) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
-                                    tint = if (isCorrect) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.error
-                                    }
+                                    if (isCorrect) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
+                                    contentDescription = null, modifier = Modifier.size(40.dp),
+                                    tint = if (isCorrect) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.error
                                 )
                             }
-
                             Spacer(modifier = Modifier.height(12.dp))
-
                             Text(
                                 text = if (isCorrect) "回答正确" else "回答错误",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isCorrect) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onErrorContainer
-                                }
+                                color = if (isCorrect) MaterialTheme.colorScheme.onPrimaryContainer
+                                else MaterialTheme.colorScheme.onErrorContainer
                             )
-
                             Spacer(modifier = Modifier.height(8.dp))
-
                             Text(
                                 text = "${result.gradingResult.score}",
                                 style = MaterialTheme.typography.displayMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isCorrect) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.error
-                                }
+                                color = if (isCorrect) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.error
                             )
                             Text(
                                 text = "/ ${result.gradingResult.maxScore} 分",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = if (isCorrect) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                } else {
-                                    MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
-                                }
+                                color = if (isCorrect) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                else MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                             )
                         }
                     }
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp)
-                        ) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Info,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Icon(Icons.Outlined.Info, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "题目信息",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("题目信息", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             InfoRow("科目", subject)
@@ -241,102 +184,48 @@ fun ResultScreen(
                         }
                     }
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp)
-                        ) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Icon(Icons.Outlined.Edit, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "学生答案",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("学生答案", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = result.studentAnswer,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Text(result.studentAnswer, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp)
-                        ) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Comment,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Icon(Icons.Outlined.Comment, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "批改意见",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("批改意见", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = result.gradingResult.feedback,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Text(result.gradingResult.feedback, style = MaterialTheme.typography.bodyLarge)
 
                             if (result.gradingResult.errorType != null) {
                                 Spacer(modifier = Modifier.height(12.dp))
                                 SuggestionChip(
                                     onClick = {},
                                     label = { Text("错误类型: ${result.gradingResult.errorType}") },
-                                    icon = {
-                                        Icon(
-                                            Icons.Outlined.Warning,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                                    icon = { Icon(Icons.Outlined.Warning, contentDescription = null, modifier = Modifier.size(18.dp)) }
                                 )
                             }
 
                             if (result.gradingResult.keyPoints.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "知识点",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Text("知识点", style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 result.gradingResult.keyPoints.forEach { point ->
-                                    Row(
-                                        modifier = Modifier.padding(vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "  ",
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = point,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
+                                    Row(modifier = Modifier.padding(vertical = 2.dp)) {
+                                        Text("  ", color = MaterialTheme.colorScheme.primary)
+                                        Text(point, style = MaterialTheme.typography.bodyMedium)
                                     }
                                 }
                             }
@@ -344,26 +233,11 @@ fun ResultScreen(
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onNavigateBack,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("继续批改")
-                        }
-
-                        Button(
-                            onClick = onNavigateHome,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("返回首页")
-                        }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(onClick = onNavigateBack, modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)) { Text("继续批改") }
+                        Button(onClick = onNavigateHome, modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)) { Text("返回首页") }
                     }
                 }
             }
@@ -373,19 +247,8 @@ fun ResultScreen(
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = "$label: ",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
-        )
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Text("$label: ", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }
