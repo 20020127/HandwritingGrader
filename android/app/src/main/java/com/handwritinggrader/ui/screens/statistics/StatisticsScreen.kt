@@ -1,14 +1,19 @@
 package com.handwritinggrader.ui.screens.statistics
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -20,11 +25,11 @@ fun StatisticsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedDays by remember { mutableIntStateOf(30) }
-    
+
     LaunchedEffect(selectedDays) {
         viewModel.loadStatistics(selectedDays)
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -33,7 +38,10 @@ fun StatisticsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { paddingValues ->
@@ -42,75 +50,87 @@ fun StatisticsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = selectedDays == 7,
-                    onClick = { selectedDays = 7 },
-                    label = { Text("近7天") }
-                )
-                FilterChip(
-                    selected = selectedDays == 30,
-                    onClick = { selectedDays = 30 },
-                    label = { Text("近30天") }
-                )
-                FilterChip(
-                    selected = selectedDays == 90,
-                    onClick = { selectedDays = 90 },
-                    label = { Text("近90天") }
-                )
+                listOf(7 to "近7天", 30 to "近30天", 90 to "近90天").forEach { (days, label) ->
+                    FilterChip(
+                        selected = selectedDays == days,
+                        onClick = { selectedDays = days },
+                        label = { Text(label) },
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                }
             }
-            
+
             when {
                 uiState.isLoading -> {
                     Box(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
                     }
                 }
-                
+
                 uiState.error != null -> {
-                    Box(
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
                     ) {
                         Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
                                 text = uiState.error!!,
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.onErrorContainer
                             )
-                            Button(onClick = { viewModel.loadStatistics(selectedDays) }) {
+                            Button(
+                                onClick = { viewModel.loadStatistics(selectedDays) },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
                                 Text("重试")
                             }
                         }
                     }
                 }
-                
+
                 uiState.overview != null -> {
                     val overview = uiState.overview!!
-                    
-                    Card(modifier = Modifier.fillMaxWidth()) {
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(20.dp)
                         ) {
                             Text(
                                 text = "总览",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -118,22 +138,28 @@ fun StatisticsScreen(
                                 StatItem(
                                     title = "总批改",
                                     value = "${overview.totalSubmissions}",
-                                    icon = Icons.Default.Assignment
+                                    icon = Icons.Outlined.Assignment,
+                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    iconColor = MaterialTheme.colorScheme.primary
                                 )
                                 StatItem(
                                     title = "正确",
                                     value = "${overview.correctCount}",
-                                    icon = Icons.Default.CheckCircle
+                                    icon = Icons.Filled.CheckCircle,
+                                    containerColor = CorrectGreenLight,
+                                    iconColor = CorrectGreen
                                 )
                                 StatItem(
                                     title = "错误",
                                     value = "${overview.wrongCount}",
-                                    icon = Icons.Default.Cancel
+                                    icon = Icons.Filled.Cancel,
+                                    containerColor = WrongRedLight,
+                                    iconColor = WrongRed
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -141,81 +167,142 @@ fun StatisticsScreen(
                                 StatItem(
                                     title = "正确率",
                                     value = "${overview.accuracyRate}%",
-                                    icon = Icons.Default.TrendingUp
+                                    icon = Icons.Outlined.TrendingUp,
+                                    containerColor = InfoBlueLight,
+                                    iconColor = InfoBlue
                                 )
                                 StatItem(
                                     title = "平均分",
                                     value = "${overview.averageScore}",
-                                    icon = Icons.Default.Star
+                                    icon = Icons.Outlined.Star,
+                                    containerColor = WarningOrangeLight,
+                                    iconColor = WarningOrange
                                 )
                                 StatItem(
                                     title = "待掌握",
                                     value = "${overview.unmasteredWrongQuestions}",
-                                    icon = Icons.Default.Warning
+                                    icon = Icons.Outlined.Warning,
+                                    containerColor = WrongRedLight,
+                                    iconColor = WrongRed
                                 )
                             }
                         }
                     }
-                    
+
                     if (uiState.subjectStats.isNotEmpty()) {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
+                                    .padding(20.dp)
                             ) {
-                                Text(
-                                    text = "按科目统计",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Outlined.MenuBook,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "按科目统计",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(16.dp))
-                                
+
                                 uiState.subjectStats.forEach { stat ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
+                                            .padding(bottom = 4.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(stat.subject)
-                                        Text("${stat.accuracyRate}%")
+                                        Text(
+                                            text = stat.subject,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = "${stat.accuracyRate}%",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
                                     LinearProgressIndicator(
-                                        progress = (stat.accuracyRate / 100).toFloat(),
-                                        modifier = Modifier.fillMaxWidth()
+                                        progress = { (stat.accuracyRate / 100).toFloat() },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(8.dp)
+                                            .clip(RoundedCornerShape(4.dp)),
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
                         }
                     }
-                    
+
                     if (uiState.questionTypeStats.isNotEmpty()) {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
+                                    .padding(20.dp)
                             ) {
-                                Text(
-                                    text = "按题型统计",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Outlined.Quiz,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "按题型统计",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(16.dp))
-                                
+
                                 uiState.questionTypeStats.forEach { stat ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
+                                            .padding(bottom = 4.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(stat.questionType)
-                                        Text("${stat.accuracyRate}%")
+                                        Text(
+                                            text = stat.questionType,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = "${stat.accuracyRate}%",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
                                     LinearProgressIndicator(
-                                        progress = (stat.accuracyRate / 100).toFloat(),
-                                        modifier = Modifier.fillMaxWidth()
+                                        progress = { (stat.accuracyRate / 100).toFloat() },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(8.dp)
+                                            .clip(RoundedCornerShape(4.dp)),
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        color = MaterialTheme.colorScheme.tertiary
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
                         }
@@ -227,23 +314,35 @@ fun StatisticsScreen(
 }
 
 @Composable
-fun StatItem(
+private fun StatItem(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    containerColor: androidx.compose.ui.graphics.Color,
+    iconColor: androidx.compose.ui.graphics.Color
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(containerColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = iconColor
+            )
+        }
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
         )
         Text(
             text = title,
@@ -252,3 +351,12 @@ fun StatItem(
         )
     }
 }
+
+private val CorrectGreenLight = androidx.compose.ui.graphics.Color(0xFFE8F5E9)
+private val WrongRedLight = androidx.compose.ui.graphics.Color(0xFFFFEBEE)
+private val WarningOrangeLight = androidx.compose.ui.graphics.Color(0xFFFFF3E0)
+private val InfoBlueLight = androidx.compose.ui.graphics.Color(0xFFE3F2FD)
+private val CorrectGreen = androidx.compose.ui.graphics.Color(0xFF4CAF50)
+private val WrongRed = androidx.compose.ui.graphics.Color(0xFFF44336)
+private val WarningOrange = androidx.compose.ui.graphics.Color(0xFFFF9800)
+private val InfoBlue = androidx.compose.ui.graphics.Color(0xFF2196F3)

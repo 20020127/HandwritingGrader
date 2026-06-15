@@ -1,13 +1,30 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from typing import Optional
 from app.services.ocr_service import ocr_service
-from app.services.llm_service import llm_service
+from app.services.llm_service import LLMService, llm_service
 from app.core.config import settings
 
 router = APIRouter()
 
+
+def _get_llm_service(request: Request) -> LLMService:
+    provider = request.headers.get("X-LLM-Provider")
+    api_key = request.headers.get("X-LLM-Api-Key")
+    model = request.headers.get("X-LLM-Model")
+    base_url = request.headers.get("X-LLM-Base-Url")
+    if any([provider, api_key, model, base_url]):
+        return LLMService(
+            api_key=api_key,
+            base_url=base_url,
+            model=model,
+            provider=provider,
+        )
+    return llm_service
+
+
 @router.post("/check")
 async def check_answer(
+    request: Request,
     file: UploadFile = File(...),
     question: str = Form(...),
     question_type: str = Form(...),
@@ -29,7 +46,8 @@ async def check_answer(
     
     student_answer = ocr_result["full_text"]
     
-    grading_result = await llm_service.check_answer(
+    svc = _get_llm_service(request)
+    grading_result = await svc.check_answer(
         question=question,
         student_answer=student_answer,
         question_type=question_type,
@@ -48,13 +66,15 @@ async def check_answer(
 
 @router.post("/check-text")
 async def check_text_answer(
+    request: Request,
     question: str = Form(...),
     student_answer: str = Form(...),
     question_type: str = Form(...),
     subject: str = Form(default="数学"),
     correct_answer: Optional[str] = Form(default=None)
 ):
-    grading_result = await llm_service.check_answer(
+    svc = _get_llm_service(request)
+    grading_result = await svc.check_answer(
         question=question,
         student_answer=student_answer,
         question_type=question_type,

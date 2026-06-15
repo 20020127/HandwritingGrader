@@ -11,6 +11,7 @@ import com.handwritinggrader.ui.screens.result.ResultScreen
 import com.handwritinggrader.ui.screens.wrongquestions.WrongQuestionsScreen
 import com.handwritinggrader.ui.screens.statistics.StatisticsScreen
 import com.handwritinggrader.ui.screens.history.HistoryScreen
+import com.handwritinggrader.ui.screens.settings.SettingsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -23,6 +24,7 @@ sealed class Screen(val route: String) {
     object WrongQuestions : Screen("wrong_questions")
     object Statistics : Screen("statistics")
     object History : Screen("history")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -38,7 +40,8 @@ fun AppNavigation(
                 onNavigateToCamera = { navController.navigate(Screen.Camera.route) },
                 onNavigateToWrongQuestions = { navController.navigate(Screen.WrongQuestions.route) },
                 onNavigateToStatistics = { navController.navigate(Screen.Statistics.route) },
-                onNavigateToHistory = { navController.navigate(Screen.History.route) }
+                onNavigateToHistory = { navController.navigate(Screen.History.route) },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
         
@@ -83,6 +86,12 @@ fun AppNavigation(
         
         composable(Screen.History.route) {
             HistoryScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Settings.route) {
+            SettingsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

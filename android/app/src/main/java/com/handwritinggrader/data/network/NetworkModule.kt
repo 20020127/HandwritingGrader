@@ -1,10 +1,13 @@
 package com.handwritinggrader.data.network
 
 import com.handwritinggrader.data.api.ApiService
+import com.handwritinggrader.data.local.SettingsDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -20,13 +23,27 @@ object NetworkModule {
     
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(settingsDataStore: SettingsDataStore): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor { chain ->
+                val config = runBlocking { settingsDataStore.llmConfig.first() }
+                val request = if (config.apiKey.isNotBlank()) {
+                    chain.request().newBuilder()
+                        .header("X-LLM-Provider", config.provider)
+                        .header("X-LLM-Api-Key", config.apiKey)
+                        .header("X-LLM-Model", config.model)
+                        .header("X-LLM-Base-Url", config.baseUrl)
+                        .build()
+                } else {
+                    chain.request()
+                }
+                chain.proceed(request)
+            }
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
